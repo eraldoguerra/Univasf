@@ -1,0 +1,775 @@
+<html><head><base href="https://scan.ai/dashboard/" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan.AI - Dashboard Vinícola Inteligente</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #6a1b9a;
+    --secondary-color: #3949ab;
+    --accent-color: #ff6f00;
+    --background-color: #f5f5f5;
+    --card-background: #ffffff;
+    --text-color: #333333;
+    --border-radius: 12px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 16px;
+  }
+
+  .dashboard-container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: var(--border-radius);
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    font-weight: 600;
+  }
+
+  .dashboard-header p {
+    margin: 10px 0 0;
+    font-size: 1.2em;
+    opacity: 0.8;
+  }
+
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+  }
+
+  .card {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .card h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .card h2 i {
+    margin-right: 15px;
+    font-size: 1.2em;
+    color: var(--accent-color);
+  }
+
+  .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+
+  .tank-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 15px;
+  }
+
+  .tank {
+    background-color: #e0e0e0;
+    border-radius: var(--border-radius);
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    font-size: 14px;
+    color: #ffffff;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+
+  .tank .tank-id {
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+
+  .tank .tank-status {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
+  .alert {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+
+  .alert i {
+    margin-right: 15px;
+    font-size: 1.2em;
+  }
+
+  .wine-list {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .wine-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .wine-item:last-child {
+    border-bottom: none;
+  }
+
+  .wine-name {
+    font-weight: 600;
+  }
+
+  .wine-popularity {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+
+  .shipment-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+  }
+
+  .filter-group label {
+    margin-bottom: 5px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    margin-bottom: 15px;
+  }
+
+  .shipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+  }
+
+  .shipment-table th,
+  .shipment-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+
+  .shipment-table th {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .shipment-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  .shipment-table tr:hover {
+    background-color: #ddd;
+    cursor: pointer;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pagination button {
+    padding: 5px 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .export-button {
+    display: block;
+    margin-top: 15px;
+    padding: 8px 15px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 1200px) {
+    .dashboard {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dashboard {
+      grid-template-columns: 1fr;
+    }
+    .dashboard-header h1 {
+      font-size: 2em;
+    }
+    .dashboard-header p {
+      font-size: 1em;
+    }
+    .card h2 {
+      font-size: 1.3em;
+    }
+    .chart-container {
+      height: 250px;
+    }
+    
+    .filter-group {
+      width: 100%;
+    }
+
+    .pagination {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .pagination button,
+    .pagination span {
+      width: 100%;
+      text-align: center;
+    }
+    .full-width {
+      grid-column: auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dashboard-container {
+      padding: 10px;
+    }
+    .dashboard-header {
+      padding: 20px;
+    }
+    .card {
+      padding: 15px;
+    }
+    .chart-container {
+      height: 200px;
+    }
+    .tank-map {
+      grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    }
+    .tank {
+      padding: 10px 5px;
+      font-size: 0.8em;
+    }
+    .wine-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .wine-popularity {
+      margin-top: 5px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div class="dashboard-container">
+      <header class="dashboard-header">
+        <h1><i class="fas fa-wine-bottle"></i> Scan.AI</h1>
+        <p>Dashboard Vinícola Inteligente</p>
+      </header>
+      <div class="dashboard">
+        <div class="card">
+          <h2><i class="fas fa-chart-line"></i> Produção de Vinhos</h2>
+          <div class="chart-container">
+            <canvas id="productionChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-boxes"></i> Estoque de Materiais</h2>
+          <div v-if="lowStockAlert" class="alert">
+            <i class="fas fa-exclamation-triangle"></i> Alerta: Níveis baixos de estoque detectados!
+          </div>
+          <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-tasks"></i> Ocupação de Tanques</h2>
+          <div class="tank-map">
+            <div v-for="tank in tanks" :key="tank.id" 
+                 :class="['tank', { 'in-use': tank.inUse }]" 
+                 :style="{ backgroundColor: getTankColor(tank) }"
+                 @click="showTankDetails(tank)">
+              <span class="tank-id">{{ tank.id }}</span>
+              <span class="tank-status">{{ tank.inUse ? 'Em uso' : 'Livre' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-wine-glass-alt"></i> Vinhos Finalizados</h2>
+          <div class="chart-container">
+            <canvas id="finishedWineChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-chart-bar"></i> Quantidade de Uvas por Tipo</h2>
+          <div class="chart-container">
+            <canvas id="grapeQuantityChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-warehouse"></i> Estoque e Produção de Uvas</h2>
+          <div class="chart-container">
+            <canvas id="grapeInventoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card full-width">
+        <h2><i class="fas fa-truck"></i> Histórico de Remessas de Uvas</h2>
+        <div v-if="grapeShipments.length > 0">
+          <div class="shipment-filters">
+            <div class="filter-group">
+              <label for="shipment-start-date">De:</label>
+              <input type="date" id="shipment-start-date" v-model="shipmentStartDate">
+            </div>
+            <div class="filter-group">
+              <label for="shipment-end-date">Até:</label>
+              <input type="date" id="shipment-end-date" v-model="shipmentEndDate">
+            </div>
+            <div class="filter-group">
+              <label for="grape-type-filter">Tipo de Uva:</label>
+              <select id="grape-type-filter" v-model="selectedGrapeType">
+                <option value="">Todos</option>
+                <option v-for="type in grapeTypes" :key="type" :value="type">{{ type }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="shipment-table">
+              <thead>
+                <tr>
+                  <th>Data de Chegada</th>
+                  <th>Tipo de Uva</th>
+                  <th>Quantidade (kg)</th>
+                  <th>Fornecedor</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="shipment in paginatedShipments" :key="shipment.id" @click="showShipmentDetails(shipment)">
+                  <td>{{ formatDate(shipment.date) }}</td>
+                  <td>{{ shipment.grapeType }}</td>
+                  <td>{{ shipment.quantity }}</td>
+                  <td>{{ shipment.supplier }}</td>
+                  <td>{{ shipment.status }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
+            <span>Página {{ currentPage }} de {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">Próximo</button>
+          </div>
+          <button class="export-button" @click="exportShipments">Exportar Histórico</button>
+        </div>
+        <div v-else>Nenhuma remessa registrada.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        lowStockAlert: true,
+        tanks: [
+          { id: 1, inUse: true, liquid: 5000, grapeType: 'Chardonnay', temperature: 15, pressure: 1.2, ph: 3.5, history: [
+            { date: '2023-10-15', action: 'Limpeza' },
+            { date: '2023-10-20', action: 'Enchimento' }
+          ]},
+          { id: 2, inUse: false, liquid: 0, grapeType: null, temperature: 0, pressure: 0, ph: 0, history: [] },
+          { id: 3, inUse: true, liquid: 7500, grapeType: 'Merlot', temperature: 16, pressure: 1.1, ph: 3.4, history: [
+            { date: '2023-09-25', action: 'Enchimento' }
+          ]},
+          { id: 4, inUse: true, liquid: 6000, grapeType: 'Cabernet Sauvignon', temperature: 14, pressure: 1.3, ph: 3.6, history: [] },
+          { id: 5, inUse: false, liquid: 0, grapeType: null, temperature: 0, pressure: 0, ph: 0, history: [] },
+          { id: 6, inUse: true, liquid: 8000, grapeType: 'Sauvignon Blanc', temperature: 15, pressure: 1.2, ph: 3.5, history: [
+            { date: '2023-09-30', action: 'Limpeza' }
+          ]},
+          { id: 7, inUse: false, liquid: 0, grapeType: null, temperature: 0, pressure: 0, ph: 0, history: [] },
+          { id: 8, inUse: true, liquid: 7000, grapeType: 'Pinot Noir', temperature: 16, pressure: 1.1, ph: 3.4, history: [] },
+          { id: 9, inUse: true, liquid: 6500, grapeType: 'Syrah', temperature: 15, pressure: 1.3, ph: 3.5, history: [] },
+          { id: 10, inUse: false, liquid: 0, grapeType: null, temperature: 0, pressure: 0, ph: 0, history: [] },
+        ],
+        grapeShipments: [
+          { id: 1, date: '2024-01-15', quantity: 5000, grapeType: 'Chardonnay', supplier: 'Vinícola do Vale', status: 'Recebida' },
+          { id: 2, date: '2024-02-03', quantity: 3500, grapeType: 'Merlot', supplier: 'Produtor XYZ', status: 'Em Inspeção' },
+          { id: 3, date: '2024-03-22', quantity: 4200, grapeType: 'Cabernet Sauvignon', supplier: 'Vinícola do Sul', status: 'Recebida' },
+          { id: 4, date: '2024-04-10', quantity: 6000, grapeType: 'Sauvignon Blanc', supplier: 'Vinícola do Centro', status: 'Em Inspeção' },
+          { id: 5, date: '2024-05-05', quantity: 3800, grapeType: 'Pinot Noir', supplier: 'Produtor ABC', status: 'Recebida' },
+          { id: 6, date: '2024-06-18', quantity: 5500, grapeType: 'Syrah', supplier: 'Vinícola do Norte', status: 'Recebida' },
+          { id: 7, date: '2024-07-02', quantity: 4700, grapeType: 'Cabernet Sauvignon', supplier: 'Vinícola do Vale', status: 'Recebida' },
+          { id: 8, date: '2024-08-14', quantity: 5200, grapeType: 'Merlot', supplier: 'Produtor XYZ', status: 'Recebida' },
+          { id: 9, date: '2024-09-09', quantity: 4900, grapeType: 'Chardonnay', supplier: 'Vinícola do Norte', status: 'Recebida' },
+          { id: 10, date: '2024-10-27', quantity: 5800, grapeType: 'Tinto', supplier: 'Produtor DEF', status: 'Recebida' },
+        ],
+        shipmentStartDate: '',
+        shipmentEndDate: '',
+        selectedGrapeType: '',
+        currentPage: 1,
+        itemsPerPage: 10,
+        grapeInventory: {
+          inStock: 8000,
+          inProduction: 4700
+        }
+      },
+      mounted() {
+        this.initCharts();
+        this.createGrapeQuantityChart();
+        window.addEventListener('resize', this.handleResize);
+      },
+      methods: {
+        initCharts() {
+          this.createProductionChart();
+          this.createStockChart();
+          this.createFinishedWineChart();
+          this.createGrapeInventoryChart();
+        },
+        handleResize() {
+          this.destroyCharts();
+          this.initCharts();
+        },
+        destroyCharts() {
+          ['productionChart', 'stockChart', 'finishedWineChart', 'grapeInventoryChart', 'grapeQuantityChart'].forEach(chartId => {
+            const chartInstance = Chart.getChart(chartId);
+            if (chartInstance) {
+              chartInstance.destroy();
+            }
+          });
+        },
+        createProductionChart() {
+          new Chart(document.getElementById('productionChart').getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+              datasets: [
+                {
+                  label: 'Espumante',
+                  data: [1200, 1900, 3000, 5000, 2000, 3000],
+                  borderColor: '#ff6f00',
+                  tension: 0.3
+                },
+                {
+                  label: 'Branco',
+                  data: [1800, 1200, 2000, 3500, 1800, 2500],
+                  borderColor: '#3949ab',
+                  tension: 0.3
+                },
+                {
+                  label: 'Tinto',
+                  data: [2200, 2900, 3200, 4500, 3000, 3500],
+                  borderColor: '#6a1b9a',
+                  tension: 0.3
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Litros'
+                  }
+                }
+              }
+            }
+          });
+        },
+        createStockChart() {
+          new Chart(document.getElementById('stockChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: ['Garrafas', 'Rótulos', 'Rolhas', 'Caixas'],
+              datasets: [{
+                label: 'Quantidade em estoque',
+                data: [5000, 10000, 8000, 2000],
+                backgroundColor: [
+                  'rgba(255, 111, 0, 0.7)',
+                  'rgba(57, 73, 171, 0.7)',
+                  'rgba(106, 27, 154, 0.7)',
+                  'rgba(0, 150, 136, 0.7)'
+                ],
+                borderColor: [
+                  'rgba(255, 111, 0, 1)',
+                  'rgba(57, 73, 171, 1)',
+                  'rgba(106, 27, 154, 1)',
+                  'rgba(0, 150, 136, 1)'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Quantidade'
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                }
+              }
+            }
+          });
+        },
+        createFinishedWineChart() {
+          new Chart(document.getElementById('finishedWineChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Espumante', 'Branco', 'Tinto'],
+              datasets: [{
+                data: [3000, 4500, 2500],
+                backgroundColor: [
+                  'rgba(255, 111, 0, 0.8)',
+                  'rgba(57, 73, 171, 0.8)',
+                  'rgba(106, 27, 154, 0.8)'
+                ]
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }
+          });
+        },
+        createGrapeInventoryChart() {
+          new Chart(document.getElementById('grapeInventoryChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Em Estoque', 'Em Produção'],
+              datasets: [{
+                data: [this.grapeInventory.inStock, this.grapeInventory.inProduction],
+                backgroundColor: [
+                  'rgba(255, 111, 0, 0.8)',
+                  'rgba(57, 73, 171, 0.8)'
+                ]
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }
+          });
+        },
+        createGrapeQuantityChart() {
+          const ctx = document.getElementById('grapeQuantityChart').getContext('2d');
+          const grapeData = this.grapeTypes.map(type => ({
+            type,
+            quantity: this.grapeShipments.filter(s => s.grapeType === type).reduce((sum, s) => sum + s.quantity, 0)
+          }));
+          
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: grapeData.map(d => d.type),
+              datasets: [{
+                label: 'Quantidade Total (kg)',
+                data: grapeData.map(d => d.quantity),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Quantidade (kg)'
+                  }
+                }
+              }
+            }
+          });
+        },
+        filterShipments() {
+          return this.grapeShipments.filter(shipment => {
+            const shipmentDate = new Date(shipment.date);
+            const startDate = this.shipmentStartDate ? new Date(this.shipmentStartDate) : null;
+            const endDate = this.shipmentEndDate ? new Date(this.shipmentEndDate) : null;
+            const typeMatch = this.selectedGrapeType ? shipment.grapeType === this.selectedGrapeType : true;
+            
+            return (!startDate || shipmentDate >= startDate) &&
+                   (!endDate || shipmentDate <= endDate) &&
+                   typeMatch;
+          }).sort((a, b) => new Date(b.date) - new Date(a.date));
+        },
+        showShipmentDetails(shipment) {
+          alert(`Detalhes da Remessa:\nID: ${shipment.id}\nData: ${this.formatDate(shipment.date)}\nTipo de Uva: ${shipment.grapeType}\nQuantidade: ${shipment.quantity} kg\nFornecedor: ${shipment.supplier}\nStatus: ${shipment.status}`);
+        },
+        formatDate(dateString) {
+          const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+          return new Date(dateString).toLocaleDateString('pt-BR', options);
+        },
+        showTankDetails(tank) {
+          let status = tank.inUse ? 'Em uso' : 'Livre';
+          let details = `Detalhes do Tanque ${tank.id}\n`;
+          details += `Status: ${status}\n`;
+          if (tank.inUse) {
+            details += `Quantidade de líquido: ${tank.liquid} litros\n`;
+            details += `Tipo de uva: ${tank.grapeType}\n`;
+            details += `Temperatura: ${tank.temperature}°C\n`;
+            details += `Pressão: ${tank.pressure} atm\n`;
+            details += `pH: ${tank.ph}\n`;
+            details += `Histórico:\n`;
+            tank.history.forEach(event => {
+              details += `  ${event.date}: ${event.action}\n`;
+            });
+          }
+          alert(details);
+        },
+        prevPage() {
+          if (this.currentPage > 1) this.currentPage--;
+        },
+        nextPage() {
+          if (this.currentPage < this.totalPages) this.currentPage++;
+        },
+        exportShipments() {
+          console.log('Exportando histórico de remessas...');
+        },
+        getTankColor(tank) {
+          if (!tank.inUse) return '#e0e0e0';
+          switch (tank.grapeType) {
+            case 'Chardonnay':
+            case 'Sauvignon Blanc':
+              return '#f0e68c';
+            case 'Merlot':
+            case 'Cabernet Sauvignon':
+            case 'Syrah':
+              return '#8b0000';
+            case 'Pinot Noir':
+              return '#ff69b4';
+            default:
+              return '#3949ab';
+          }
+        }
+      },
+      computed: {
+        grapeTypes() {
+          return [...new Set(this.grapeShipments.map(s => s.grapeType))];
+        },
+        filteredShipments() {
+          return this.filterShipments();
+        },
+        paginatedShipments() {
+          const start = (this.currentPage - 1) * this.itemsPerPage;
+          const end = start + this.itemsPerPage;
+          return this.filteredShipments.slice(start, end);
+        },
+        totalPages() {
+          return Math.ceil(this.filteredShipments.length / this.itemsPerPage);
+        }
+      },
+      beforeDestroy() {
+        window.removeEventListener('resize', this.handleResize);
+      }
+    });
+  </script>
+</body></html>
